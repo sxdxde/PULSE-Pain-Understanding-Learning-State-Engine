@@ -13,4 +13,11 @@ Phase 1 of PULSE is implemented and SB3-compatible. Three files created:
 
 **Why:** Phase 1 establishes the simplest possible RL baseline before adding pain signals, partial observability, or richer state in later phases.
 
-**How to apply:** When Phase 2 is discussed, build on PulseGridWorld by subclassing or wrapping it rather than rewriting from scratch. The env already supports extensible reward shaping and step info dicts.
+**How to apply:** When Phase 3 is discussed, build on PulseGridWorld by subclassing or wrapping it rather than rewriting from scratch. The env already supports extensible reward shaping and step info dicts.
+
+## Phase 2 — Vector Slab (complete)
+
+- `slab.py` — `SlabNetwork(nn.Module)`: 8×8×16 `nn.Parameter`, methods: `deform()`, `deformation_depth()` (L2 norm), `reset_cell()`, `elastic_recovery()`, `pain_map()`, `summary()`
+- `visualise_slab.py` — simulates trap damage, renders white→red heatmap before and after elastic recovery, demonstrates `reset_cell`
+- Key design choices: L2 norm (not L1/Lmax) as pain score; elastic (decay=0.99) vs plastic (no decay) memory; vector_dim=16 as middle ground between expressiveness and interpretability
+- Phase 3 goal: couple the Slab to the live PPO agent — deform on each trap visit, feed pain_map as auxiliary observation channel
