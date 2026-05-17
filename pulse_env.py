@@ -442,7 +442,10 @@ class PulseGridWorld(gym.Env):
             # that reaching the goal is the primary objective. If the reward were
             # too small, the -0.1 step penalty might dominate and the agent could
             # learn to stand still (minimising negative steps) rather than exploring.
-            reward = 10.0
+            # WHY += instead of =? reward was initialised to resistance_cost above.
+            # Using += preserves the physics cost while adding the goal bonus on top.
+            # The goal cell has BASELINE_RESISTANCE (0.1) so the net is 10.0 - 0.1 = 9.9.
+            reward += 10.0
             # WHY: terminated=True ends the episode naturally. The RL algorithm
             # will not bootstrap a value estimate beyond this point — it knows
             # the episode is genuinely over, not just truncated by a time limit.
@@ -508,10 +511,13 @@ class PulseGridWorld(gym.Env):
                 "pain_score": pain_score,
             })
 
-            # WHY: Total reward = base penalty + pain bonus.
-            # Note the sign: pain_score is always ≥ 0 (it's an L2 norm), so
-            # subtracting it always makes the total reward MORE negative.
-            reward = base_trap_reward - pain_score
+            # WHY: Total reward = resistance_cost + base penalty + pain bonus.
+            # reward was initialised to resistance_cost above; += adds the trap
+            # signal on top. Trap cells have TRAP_RESISTANCE (0.7), so the full
+            # cost is: -0.7 (resistance) + -10.0 (base) + -pain_score (slab) = very negative.
+            # This three-component penalty means: the approach was thick (resistance),
+            # the entry was catastrophic (base), and the history makes it worse (pain).
+            reward += base_trap_reward - pain_score
             ### END PHASE 3 ###
 
             # WHY: Traps also terminate the episode. The agent "falls in" and must
@@ -524,7 +530,13 @@ class PulseGridWorld(gym.Env):
             # to loop around the grid forever (avoiding traps but never reaching
             # the goal) because the reward signal is identical to not having moved.
             # This is a common RL trick: make time itself have a small cost.
-            reward = -0.1
+            # WHY += instead of =? reward is already resistance_cost (initialised above).
+            # An open cell gets: resistance_cost + living_penalty.
+            # For a baseline cell: -0.1 (resistance) + -0.1 (living) = -0.2 total.
+            # For a trap-neighbour cell: -0.7 (resistance) + -0.1 (living) = -0.8 total.
+            # This is the "pre-entry dread" signal — the agent feels the danger zone
+            # becoming increasingly costly as it moves toward (not just into) traps.
+            reward += -0.1
 
         # WHY: truncated=False because we have no time limit in this env.
         # If we added a max_steps limit (e.g. 200 steps per episode), we would
