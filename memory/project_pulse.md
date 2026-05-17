@@ -38,4 +38,12 @@ PULSE (Pain, Understanding, and Learning State Engine) is an 8×8 RL grid world 
 3. No hard-blocking — cornered fallback always provides an action.
 4. All files comment every line, especially WHY comments on mechanisms.
 
+**Phase 6** — `benchmark.py` + `plot_benchmark.py` + `results_summary.py` + rewritten `README.md`:
+- benchmark.py: 3 agents (PPO, DQN, PULSE-PPO) × 5 seeds × 50 checkpoints. Chunked training via model.learn(EVAL_EVERY, reset_num_timesteps=False). PULSE-PPO reads training_inner_env.slab (via DummyVecEnv.envs[0]) for eval aversion. Saves to benchmark_results.csv.
+- plot_benchmark.py: 4-panel figure with ±1std shaded bands. smooth_series() for trend lines. Blue=PPO, Orange=DQN, Purple=PULSE-PPO.
+- results_summary.py: Convergence timestamp (first 80% goal rate), final metrics table, Cohen's d effect sizes, honest interpretation for all 4 possible outcome scenarios.
+- README.md: Complete rewrite covering all 6 phases, file table, how to read benchmark results, statistical caveats.
+
+**Key benchmark design:** PULSE-PPO training = vanilla PPO (identical to baseline). Only eval differs (PainShapedPolicy filter). All three agents train on SAME PulseGridWorld (Phases 3-4 active). This isolates the aversion filter's contribution from the shaped reward's contribution.
+
 **How to apply:** All phases build on each other. Never remove prior phase comments or logic. Label new additions with ### PHASE N ### / ### END PHASE N ### markers.
