@@ -23,4 +23,19 @@ PULSE (Pain, Understanding, and Learning State Engine) is an 8×8 RL grid world 
 
 **Why:** A comment-heavy codebase — every line explains WHY (physics vs. learning signal, pre-entry signal concept, feedback loop for convergence). Comments are a first-class deliverable for this project.
 
+**Phase 5** — `pain_shaped_policy.py` + `train_phase5.py` + `visualise_aversion.py` + `compare_phase5.py`:
+- PainShapedPolicy wraps a trained PPO model with an aversion filter at EVALUATION time (never during training).
+- `aversion_score(x,y) = deformation_depth(x,y) × resistance(x,y)` — product of memory and physics.
+- `should_avoid(x,y, threshold=0.5)` — True if score > threshold (requires ~18 trap hits before firing).
+- `select_action(obs, candidate_actions)` — filters blocked actions, picks best PPO-preferred safe action; cornered fallback picks least-aversion action.
+- train_phase5.py: same vanilla PPO training + post-training PULSE evaluation loop.
+- visualise_aversion.py: 10 eval episodes, per-step console diagnostics + matplotlib path+blocked-arrow rendering.
+- compare_phase5.py: 50 vanilla vs 50 PULSE episodes, 3-panel comparison plot (reward, length, trap/goal rates).
+
+**Key design principles:**
+1. Aversion filter at eval only — training stays on-policy vanilla PPO.
+2. Pain as MEMORY (aversion) vs pain as REFLEX (hard trap lookup) — the product formula requires both evidence and physics.
+3. No hard-blocking — cornered fallback always provides an action.
+4. All files comment every line, especially WHY comments on mechanisms.
+
 **How to apply:** All phases build on each other. Never remove prior phase comments or logic. Label new additions with ### PHASE N ### / ### END PHASE N ### markers.
