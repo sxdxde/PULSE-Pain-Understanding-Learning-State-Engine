@@ -102,6 +102,15 @@ class PulseGridWorld(gym.Env):
         # while avoiding three traps scattered across the grid.
         self.start_pos = (0, 0)
 
+        # WHY MAX_STEPS: Without a step limit, an episode can run indefinitely
+        # if the agent loops (e.g. the aversion filter during evaluation blocks
+        # all exits, causing the agent to cycle between two cells forever).
+        # 200 steps is generous — the optimal path is only 14 steps. At 200,
+        # any agent that hasn't reached the goal or a trap is clearly lost.
+        # SB3 handles truncated=True with a value bootstrap, so training is
+        # unaffected; the episode ends cleanly with a discount correction.
+        self.MAX_STEPS = 200
+
         # --- ACTION SPACE ---
         # WHY: Discrete(4) tells gymnasium (and SB3) there are exactly 4 valid
         # integer actions: 0, 1, 2, 3. The RL algorithm will only ever sample
@@ -543,7 +552,10 @@ class PulseGridWorld(gym.Env):
         # set truncated=True when the step counter hit the limit, even if the
         # episode didn't end naturally. SB3's PPO handles terminated and truncated
         # differently — truncated episodes still receive a value bootstrap.
-        truncated = False
+        # WHY: truncated=True when the step limit is hit. This prevents
+        # infinite episodes when the agent is stuck in a cycle (especially
+        # relevant during aversion-filtered evaluation in Phase 5).
+        truncated = self.step_count >= self.MAX_STEPS
 
         # WHY: Return position as float32 to match observation_space dtype.
         observation = np.array(self.agent_pos, dtype=np.float32)

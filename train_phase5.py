@@ -69,11 +69,13 @@ logging.basicConfig(
 # CONFIGURATION
 # =============================================================================
 
-# WHY 50,000 timesteps? Same as Phase 1 — the grid is simple enough that
-# a well-trained policy emerges in this budget. Keeping it identical to Phase 1
-# ensures any performance difference in evaluation comes from the aversion filter,
-# not from more training.
-TOTAL_TIMESTEPS = 50_000
+# WHY 200,000 timesteps?
+# The Phase 4 reward landscape is HARDER than Phase 1 — the resistance field adds
+# a negative gradient everywhere, making the reward signal noisier. 50k was not
+# enough for the policy to escape the local minimum of "stay put at (0,0)"
+# (which gives a predictable -0.2/step vs. the risk of -10+ trap hits).
+# 200k gives the agent enough experience to reliably discover the goal path.
+TOTAL_TIMESTEPS = 200_000
 
 # WHY phase5 naming? We save separately from phase1 so both model checkpoints
 # coexist and can be loaded for cross-phase comparison in compare_phase5.py.
@@ -119,18 +121,25 @@ def train() -> PPO:
     vec_env  = make_vec_env(make_env, n_envs=1)
     eval_env = make_vec_env(make_env, n_envs=1)
 
-    # WHY these PPO hyperparameters? Identical to Phase 1 for fair comparison.
-    # Any performance difference between phases is due to the environment mechanics
-    # and evaluation-time aversion, not different training hyperparameters.
+    # WHY these PPO hyperparameters?
+    # ent_coef=0.01: The key fix for policy collapse. Without it, PPO's entropy
+    #   dropped from -1.38 → -0.087 within 3k steps, causing the policy to
+    #   deterministically pick action=UP (a wall-bounce no-op at row 0), locking
+    #   ep_len=200 and ep_rew=-40 for the entire run. Adding ent_coef=0.01 adds
+    #   a bonus to the loss for high-entropy policies, keeping exploration alive.
+    # n_steps=2048: Larger rollout buffer means each PPO update sees more diverse
+    #   states (not just the start corner). 512 steps with ep_len=200 means the
+    #   buffer was dominated by near-identical start-corner experience.
     model = PPO(
         policy="MlpPolicy",
         env=vec_env,
         verbose=1,
         learning_rate=3e-4,
-        n_steps=512,
+        n_steps=2048,
         batch_size=64,
         n_epochs=10,
         gamma=0.99,
+        ent_coef=0.01,     # WHY: prevents entropy collapse; keeps exploration alive
         tensorboard_log=LOG_PATH,
     )
 
