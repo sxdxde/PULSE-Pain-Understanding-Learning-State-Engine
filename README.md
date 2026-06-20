@@ -6,7 +6,7 @@ PULSE is a research project that asks: *what if a reinforcement learning agent h
 
 ## The Core Idea
 
-Standard RL reward signals are **stateless** — they fire on entry to a bad state and leave no trace. The agent rediscovers danger from scratch each episode. PULSE instead maintains a **Slab** (a grid of learnable vectors representing skin) that accumulates deformation every time the agent is hurt. The L2 norm of each cell's vector is its pain score. Around each trap, a **ResistanceField** adds jelly-like viscosity that the agent feels before entering. A **PainShapedPolicy** reads both layers at evaluation time and vetoes any action whose target cell exceeds an aversion threshold — the agent refuses to enter states it has learned to dread. Phase 6 measures whether this changes learning outcomes.
+Standard RL reward signals are **stateless** — they fire on entry to a bad state and leave no trace. The agent rediscovers danger from scratch each episode. PULSE instead maintains a **Slab** (a grid of learnable vectors representing skin) that accumulates deformation every time the agent is hurt. The L2 norm of each cell's vector is its pain score. Around each trap, a **ResistanceField** adds jelly-like viscosity that the agent feels before entering. A **PainShapedPolicy** reads both layers at evaluation time and vetoes any action whose target cell exceeds an aversion threshold — the agent refuses to enter states it has learned to dread. Phase 6 measures whether this changes learning outcomes!
 
 ---
 
