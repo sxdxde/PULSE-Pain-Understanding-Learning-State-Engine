@@ -10,7 +10,7 @@ Standard RL reward signals are **stateless** — they fire on entry to a bad sta
 
 ---
 
-## Project Structure
+## Project Structures
 
 ```
 PULSE/
